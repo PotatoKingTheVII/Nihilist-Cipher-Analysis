@@ -7,6 +7,7 @@ Prints all the valid (addition not grid) key periods. Done by grouping the ciphe
 
 A similar approach to solving vigenère. Both the possible key lengths and actual keys for each position can be found with the above method. Each key position is treated independently. For example with the same "helloworld" with a 3 length key where the first key letter is responsible for "hlod" let us suppose that "a, d, e" were the only possible keys for that position. We would then decode "hlod" with a, d, and e and pick the best result, scoring them by their monogram frequencies. This is then done for the second and third key positions and the best keys printed for each position.
 
-## TODO:
+**NihilistHillClimber**:
+Can require a decent amount of text but will hill climb hopefully finding both the correct grid and key. The basic idea is that a list of all valid keys is first made and then a random grid created. The ciphertext is then decrypted with these and scored by its quadgrams. A small change will then be made to either the grid and key and checked to see if it improved the fitness. If it did then that change is kept and itself modified, if it didn't then the change is discarded. 95% of the time the grid itself is mutated while 5% of the time a new random key is picked from the list of valid ones. If this process hasn't given any improvements in 4000 iterations then the work is discarded and a new random initial grid is created and the process started again. The best overall result is kept track of and presented as the best guess.
 
-Hill climbing approach will be added soon, allowing solving of both an unknown grid and key at the same time
+Credit to James Lyons, http://practicalcryptography.com/cryptanalysis/text-characterisation/quadgrams/ for the quadgram scoring method and quadgrams.txt file
