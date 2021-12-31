@@ -67,7 +67,18 @@ def fitness(text):  #Calc with chi squared monogram comparison
 ##Polybius helpers
 def findNumberPolybiusPos(numberin):
     number = str(numberin)
-    return polybiusGrid[int(number[0])-1][int(number[1])-1] #-1 to account for 0 based index
+    x = int(number[0])-1
+    y = int(number[1])-1
+
+    #If we get a negative set it to be an out of grid cord
+    #To force an error and account for them
+    if(x < 0):
+        x=9
+    if(y < 0):
+        y=9
+
+    #Account for negatives here
+    return polybiusGrid[x][y] #-1 to account for 0 based index
 
 def findLetterPolybiusPos(letter, lookup_dict):
     return lookup_dict.get(letter)
