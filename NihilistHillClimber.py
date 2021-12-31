@@ -24,7 +24,17 @@ else:
 ##Polybius helpers
 def findNumberPolybiusPos(numberin, alphabet):
     number = str(numberin)
-    return alphabet[int(number[0])-1][int(number[1])-1] #-1 to account for 0 based index
+    x = int(number[0])-1
+    y = int(number[1])-1
+
+    #If we get a negative set it to be an out of grid cord
+    #To force an error and account for them
+    if(x < 0):
+        x=9
+    if(y < 0):
+        y=9
+
+    return alphabet[x][y] #-1 to account for 0 based index
 
 #Empirically find all possible keys for each key index
 def findValidKeys(ct, key_length):
