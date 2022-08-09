@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en-UK">
+<head>
+<title>Nihilist Analysis</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<script type="text/javascript" src="nihilistAnalysis.js"></script>
+<script type="text/javascript" src="../shared/quadgrams.js"></script>
+<link rel="stylesheet" href="stylesNihilist.css">
+</head>
+
+<body>
+<!--Top header-->
+<div class="center-screen">
+	<div class="topHeader">
+		<h1 id="HeaderPNG">Nihilist Analysis</h1>
+		<p>Collection of tools to solve Nihilist ciphers</p>	
+	</div>
+	<hr>
+
+	<!--DECODE SECTION START-->
+	<div class="row">
+		<div class="column">
+			<h2>Decode Ciphertext</h2>
+			<br>
+			<div class="row">		
+				<label for="inputTxt">Raw Ciphertext:</label>
+			</div>
+
+			<div class="row">		
+				<textarea id="inputTxt" name="inputTxt" rows="10" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/></textarea>
+			</div>
+			<br>
+			<div class="row">	
+				<label for="outputTxt">Decoded output:</label>
+			</div>
+			
+			<div class="row">
+				<textarea id="outputTxt" name="outputTxt" rows="10" cols="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/></textarea>
+			</div>		
+
+		</div>
+		<!--DECODE SECTION END-->
+			
+		<!--Options section start-->	
+		<br>
+		<br>
+		<div class="row">
+			<button onclick="keylength_call()">Find keylengths</button>	
+		</div>	
+
+		<div class="row">
+			<button onclick="monoalph_call()">Solve as monoalph</button>	
+		</div>	
+		
+		<br>
+		<div class="row">
+			<button onclick="hill_climb_call()">Hill climb</button>	
+			<input type="checkbox" id="hill_key_limit" name="hill_key_limit" value="hill_key_limit">
+			<label for="hill_key_limit"> Only search for key while climbing?</label><br>
+			<label for="hill_iteration_limit">Hill iteration count:</label>
+			<input type="number" id="hill_iteration_limit" name="hill_iteration_limit" min="1" value = "100">
+			<button id="stop_hill_climb" name="stop_hill_climb">Stop Solving</button> <!--Onclick doesn't have scope so set event handler later on-->
+		</div>	
+
+		<label for="hill_progress">Hill-climbing progress:</label>
+		<progress id="hill_progress" value="0" max="100"></progress>
+
+		<br>
+		<br>
+		
+		<div class="grid_row">
+			<label for="grid_options">Grid Size:</label><br>
+			<!--You know I thought those onclick functions would be a lot shorter than they turned out to be and can't be arsed making them actual functions now -->
+			<form id="grid_options" class = "grid_row">
+				<input type="radio" id="5" name="grid_size" value="5" checked onclick="
+				document.getElementsByName('grid_input')[0].value = ('abcdefghiklmnopqrstuvwxyz');
+				document.getElementsByName('grid_input')[0].rows = 5;
+				document.getElementsByName('grid_input')[0].cols = 4;
+				document.getElementsByName('grid_input')[0].maxLength = 25">
+				<label for="html">5</label><br>
+				<input type="radio" id="6" name="grid_size" value="6" onclick="
+				document.getElementsByName('grid_input')[0].value = ('abcdefghijklmnopqrstuvwxyz0123456789');
+				document.getElementsByName('grid_input')[0].rows = 6;
+				document.getElementsByName('grid_input')[0].cols = 5;
+				document.getElementsByName('grid_input')[0].maxLength = 36">
+				<label for="css">6</label><br>
+			</form>
+		</div>	
+		
+		<div class="grid_row">
+			<label for="number" class = "grid_row">Key size:</label><br>
+			<input type="number" id="key_size" name="key_size" min="1" value = "6">
+		</div>	
+		
+		<div class="row">
+			<label for="grid_input">Polybius Grid:</label><br>
+			<textarea id="grid_input" name="grid_input" rows="5" cols="4"/>abcdefghiklmnopqrstuvwxyz</textarea>
+		</div>
+		
+		<div class="row">
+		<br>
+			<h2>Description:</h2>
+			<p class = "para40">
+				The Nihilist cipher can be thought of as a vigenere cipher working in numeric space
+				meaning the same cryptanalysis techniques can be used to solve it. Additionally, the
+				restriction that only certain grid cordinates are valid (e.g. 11 to 55 for a 5x5 but
+				not 56 77 etc) allow limits to be placed on possible keylengths. A a-z/a-z0-9 charset is
+				supported and both the monoalph and hill-climbing read the Polybius grid for their input.
+				The monoalph can be used when the grid is known and will likely get the correct key
+				straight away while the hill-climbing searches for both the gird and key by default
+				(Can be changed to only search for key with option). 
+				
+			</p>
+			<br>
+			<p class = "para40">
+				Credit to James Lyons at 
+				http://practicalcryptography.com/cryptanalysis/text-characterisation/quadgrams/
+				for quadgram frequencies and fitness method.
+			</p>
+		<br>
+		</div>
+		
+	<!--Footer-->	
+	<hr>
+	<p1>You can learn more about how this method works with the code at </p1>
+	<a href="https://github.com/PotatoKingTheVII/Nihilist-Cipher-Analysis">github</a>
+	<p1>and contact me on Discord: PotatoKingTheVII#4280</p1>
+	
+</div>
+</body>
+
+<script>
+//Holds all workers if created with hill climbing to keep track
+const worker_handles = [];
+
+//Load quadgrams once for any function in the future needing them
+var quadgram_results = load_quadgrams();
+var quadgram_table = quadgram_results[0];
+var quad_min_value = quadgram_results[1];
+
+function keylength_call()
+{
+	document.getElementById('outputTxt').value = "";	//Reset output box
+	var ciphertext = document.getElementById('inputTxt').value;
+	var grid_size = document.getElementById("grid_options").elements["grid_size"].value
+
+	possible_keylengths(ciphertext, grid_size);	//Call the actual function now
+}
+
+function monoalph_call()
+{
+	document.getElementById('outputTxt').value = "";	//Clear the output box
+	var ciphertext = document.getElementById('inputTxt').value;
+	var grid_size = document.getElementById("grid_options").elements["grid_size"].value;
+	var key_size = document.getElementById('key_size').value;
+	var grid_input = document.getElementById('grid_input').value.toLowerCase();
+	
+	//Convert the grid to our array format
+	var polybiusGrid = [];
+	for (let i = 0; i < grid_size; i++)
+	{
+		polybiusGrid.push([])
+	}
+
+	for (let i = 0; i < grid_size**2; i++)
+	{
+		var row = Math.floor(i/grid_size);
+		var letter = grid_input[i];
+		polybiusGrid[row].push(letter)
+	}
+
+	monoalph_solve(ciphertext, polybiusGrid, key_size);	//Call the actual function now
+}
+
+function hill_climb_call()
+{
+	document.getElementById('outputTxt').value = "";	//Reset output box
+	var ciphertext = document.getElementById('inputTxt').value;
+	var grid_size = document.getElementById("grid_options").elements["grid_size"].value
+	var key_size = document.getElementById('key_size').value;
+	var grid_input = document.getElementById('grid_input').value.toLowerCase();
+	var hill_fix_grid = document.getElementById("hill_key_limit").checked;
+	var hill_iteration_limit = document.getElementById("hill_iteration_limit").value;
+	
+	//Read from and convert to array format for grid
+	var polybiusGrid = [];
+	for (let i = 0; i < grid_size; i++)
+	{
+		polybiusGrid.push([])
+	}
+
+	for (let i = 0; i < grid_size**2; i++)
+	{
+		var row = Math.floor(i/grid_size);
+		var letter = grid_input[i];
+		polybiusGrid[row].push(letter)
+	}
+	//Check if there are any old workers running,if so delete them
+	for (let i = 0; i < worker_handles.length; i++)
+	{
+		worker_handles[i].terminate();	//Might be an idea to not do this as you could run mulitple workers outputting
+										//Their best results at the same time for future.
+	}
+	
+	//Create new worker and post out all required inputs
+	const myWorker = new Worker('hill_worker.js');
+	worker_handles.push(myWorker)
+	myWorker.postMessage([ciphertext, polybiusGrid, key_size, quadgram_table, quad_min_value, hill_fix_grid, hill_iteration_limit]);
+	
+	//What to do when worker reports back status
+	myWorker.addEventListener("message", function handleMessageFromWorker(msg)
+	{
+		//Unpack the results and update the user output
+		var message_flag = msg.data[0]
+		
+		if(message_flag == 0)	//Message is to report new results
+		{
+			var best_pt = msg.data[1];
+			var best_fitness = msg.data[2];
+			var best_key = msg.data[3];
+			var best_grid = msg.data[4];
+
+			//Turn the numeric key into letters before displaying it
+			var string_key = ""
+			var valid = true;
+			for (let i = 0; i < best_key.length; i++)
+			{
+				try {string_key += find_number_polybius_pos(best_key[i], best_grid)}	//If this fails then a wrong key-length was likely selected
+				catch 
+				{
+					document.getElementById("hill_progress").value = 0
+					document.getElementById('outputTxt').value = "Error while hill-climbing, likely not a valid key-length selected";
+					myWorker.terminate();
+					break
+				}
+			}
+			
+			if(valid == false) {return 1}	//If we failed above then abort the rest of the function
+			best_grid = msg.data[4].join(" ").trim().replaceAll(",", "");	//Format grid to be more readable after using it to derive the key
+			document.getElementById('outputTxt').value = "Best plaintext: " + best_pt + "\nGrid: " + best_grid + "\nKey: " + string_key + "\nFitness: " + best_fitness + "\n\n" + document.getElementById('outputTxt').value ;
+		}
+		
+		else if(message_flag == 1) //Message is to update progress bar
+		{
+			document.getElementById("hill_progress").value = (msg.data[1]*100);
+		}
+	}
+	)
+	
+	//Add listener instead of onclick to button so we can access variables
+	//When called stop all workers
+	document.getElementById("stop_hill_climb").addEventListener("click", stop_hill_climb, false);
+	function stop_hill_climb()
+	{
+		//Check if there are any old workers running,if so delete them
+		for (let i = 0; i < worker_handles.length; i++)
+		{
+			worker_handles[i].terminate();
+			document.getElementById("hill_progress").value = 0;	//reset progess value to 0
+		}
+	}
+	
+}
+</script>
+</html>
