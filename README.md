@@ -12,3 +12,6 @@ A similar approach to solving vigenère. Both the possible key lengths and actua
 Can require a decent amount of text but will hill climb hopefully finding both the correct grid and key. The basic idea is that a list of all valid keys is first made and then a random grid created. The ciphertext is then decrypted with these and scored by its quadgrams. A small change will then be made to either the grid and key and checked to see if it improved the fitness. If it did then that change is kept and itself modified, if it didn't then the change is discarded. 95% of the time the grid itself is mutated while 5% of the time a new random key is picked from the list of valid ones. If this process hasn't given any improvements in 4000 iterations then the work is discarded and a new random initial grid is created and the process started again. The best overall result is kept track of and presented as the best guess.
 
 Credit to James Lyons, http://practicalcryptography.com/cryptanalysis/text-characterisation/quadgrams/ for the quadgram scoring method and quadgrams.txt file
+
+**Javascript Version**:
+A direct port of all the Python files to a single interface with all the same functionality. Needs to be run as a local server due to CORS etc
